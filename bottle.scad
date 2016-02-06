@@ -16,20 +16,33 @@ clearance = 0.3;
 $fs = 0.4;
 $fa = 1;
 
+module bottle_cross_section ()
+{
+    circle (d = bottle_od);
+}
+
+module extruded_bottle (h, offset_r = 0)
+{
+    linear_extrude (height = h)
+        offset (r = offset_r)
+        bottle_cross_section ();
+}
+
 module bottle_male ()
 {
     difference () {
         h = bottle_h / 2;
 
         union () {
-            cylinder (d = bottle_od, h = h);
+            extruded_bottle (h = h);
 
             translate ([0, 0, h - epsilon])
-                cylinder (d = bottle_od - wall_thickness, h = joint_length);
+                extruded_bottle (h = joint_length + epsilon,
+                                 offset_r = -wall_thickness / 2);
         }
 
         translate ([0, 0, wall_thickness])
-            cylinder (d = bottle_id, h = h + joint_length);
+            extruded_bottle (h = h + joint_length, offset_r = -wall_thickness);
     }
 }
 
@@ -38,16 +51,14 @@ module bottle_female ()
     difference () {
         h = bottle_h / 2;
 
-        cylinder (d = bottle_od, h = h);
+        extruded_bottle (h = h);
 
-        union () {
-            translate ([0, 0, wall_thickness])
-                cylinder (d = bottle_id, h = h);
+        translate ([0, 0, wall_thickness])
+            extruded_bottle (h = h, offset_r = -wall_thickness);
 
-            translate ([0, 0, h - joint_length - clearance])
-                mcad_polyhole (d = bottle_id + wall_thickness + clearance,
-                               h = joint_length + clearance + epsilon);
-        }
+        translate ([0, 0, h - joint_length - clearance])
+            extruded_bottle (h = h,
+                             offset_r = -(wall_thickness / 2 - clearance));
     }
 }
 
